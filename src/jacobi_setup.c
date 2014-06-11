@@ -7,7 +7,7 @@ int main(int argc, char** argv){
 		exit(1);
 	}
 	char* matrix_file = argv[1];
-	bs = atoi(argv[2]);
+	int bs = atoi(argv[2]);
 	int format = atoi(argv[3]);
 
 	hbmat_t *L_csr, *L_csc, *L, *A, *A_csr, *A0;
@@ -19,22 +19,15 @@ int main(int argc, char** argv){
 	gettimeofday(&start, NULL);
 
 	one2zero(A);
-	int *work = malloc(A->n * sizeof(int));
+	hb_print_CSC2("A000.dat", A);
 
-	if(!format){
-		L = ompss_csc_dchol_ll(bs, A, work);
-	}else{
-		L = ompss_csr_dchol_ll(bs, A, work);
-	}
-
-#pragma omp taskwait
+	L = hb2hbh(A,bs);
 
 	A0 = hbh2hb(L);
 	hb_print_CSC2("L000.dat", A0);
-	hbh_free2(L);
+	hbh_free(L);
 	hb_free(A0);
 	hb_free(A);
-	free(work);
 	return 0;
 }
 

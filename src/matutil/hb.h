@@ -25,8 +25,16 @@ typedef struct strhbmat {
 	int orig_row;
 	int orig_col;
 	int *e_tree;
-} hbmat_t;
 
+	/*
+	 * The following for hyper-matrix only
+	 */
+	int *vptr_pool;
+	int *vpos_pool;
+	double *vval_pool;
+	pthread_mutex_t* mtx;
+
+} hbmat_t;
 
 
 static inline void __attribute__((always_inline)) hbmat_free(hbmat_t *m) {

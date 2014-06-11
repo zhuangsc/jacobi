@@ -13,3 +13,4 @@ autom4te*
 aclocal.m4
 compile
 *.sh
+src/original

@@ -917,6 +917,129 @@ void hyper_sym_csr_task2(hbmat_t *block){
 
 
 
+void hb2hbh_csr_task(int I, int J, hbmat_t *A, int b, int *entry, hbmat_t *block){
+	int m = A->m;
+	int* vptr = A->vptr; int* vpos = A->vpos; 
+	double* vval = A->vval;
+	int brow = I*b; int erow = (I+1)*b;
+	int bcol = J*b; int ecol = (J+1)*b;
+
+	vector_t* ab_vptr = vector_create();
+	vector_t* ab_vpos = vector_create();
+	vector_t* ab_vval = vector_create();
+	vector_clear(ab_vptr); vector_clear(ab_vpos); vector_clear(ab_vval);
+	vel_t pos_val;
+
+	*entry = 0;
+
+	for ( int L = brow; L < erow; ++L ) {
+		pos_val.i = ab_vpos->elemc; 
+		vector_insert(ab_vptr, pos_val);
+		
+		//Padding
+		if ( L >= m ) {
+			if ( ecol < m )
+				continue;
+			pos_val.i = L - bcol;
+			vector_insert(ab_vpos, pos_val);
+			pos_val.d = 1;
+			vector_insert(ab_vval, pos_val);
+			continue;
+		}
+
+		int p_elemc = ab_vpos->elemc;
+		for ( int k = vptr[L]; k < vptr[L+1]; ++k ) {
+
+			if ( vpos[k] >= bcol && vpos[k] < ecol){
+				pos_val.i = vpos[k] - bcol;
+				vector_insert(ab_vpos, pos_val);
+				pos_val.d = vval[k];
+				vector_insert(ab_vval, pos_val);
+			}
+		}
+	}
+
+	pos_val.i = ab_vpos->elemc;
+	vector_insert(ab_vptr, pos_val);
+
+	if ( ab_vpos->elemc ){
+		block->m = b; block->n = b; block->elemc = ab_vpos->elemc;
+		block->vdiag = NULL;
+		block->vptr = vector2int(ab_vptr); 
+		block->vpos = vector2int(ab_vpos);
+		block->vval = vector2double(ab_vval);
+		*entry = 1;
+	}
+}
+
+hbmat_t* hb2hbh(hbmat_t *A, int b){
+
+	int m = A->m; int n = A->n; int elemc = A->elemc;
+	int *vptr = A->vptr; int *vpos = A->vpos; double* vval = A->vval;
+	int M = ( m + b - 1 ) / b;
+	int N = ( n + b - 1 ) / b;
+	int num = ((1 + M) * N) / 2;
+
+	hbmat_t* hyper = malloc(sizeof(hbmat_t));
+	hyper->m = M; hyper->n = N; hyper->vdiag = NULL;
+	hyper->vval = malloc(num * sizeof(hbmat_t*));
+	hbmat_t** hbmat_array = malloc(num * sizeof(hbmat_t*));
+	int* hentry = malloc(num * sizeof(int));
+
+	vector_t* ab_vptr = vector_create(); 
+	vector_t* ab_vpos = vector_create();
+	vector_clear(ab_vptr); vector_clear(ab_vpos);
+	vel_t pos_val;
+
+	if ( M==0 || N==0 ) {
+		fprintf( stderr, "block size %i too large\n", b);
+	}
+
+	for(int i = 0; i < num; ++i)
+		hbmat_array[i] = malloc(sizeof(hbmat_t));
+	int acc = 0;
+	int I, J;
+	for ( I = 0; I < M; ++I ){
+		for ( J = 0; J < I+1; ++J){
+			hb2hbh_csr_task(I, J, A, b, &(hentry[acc]), hbmat_array[acc]);
+			++acc;
+		}
+	}
+
+#pragma omp taskwait
+
+	acc = 0;
+	int acc0 = 0;
+	for ( I = 0; I < M; ++I ) {
+		pos_val.i = ab_vpos->elemc;
+		vector_insert(ab_vptr, pos_val);
+		for ( J = 0; J < I+1; ++J ) {
+			if ( hentry[acc] ) {
+				pos_val.i = J;
+				vector_insert(ab_vpos, pos_val);
+				((hbmat_t**)hyper->vval)[acc0] = hbmat_array[acc];
+				++acc;
+				++acc0;
+			} else {
+				free(hbmat_array[acc]);
+				++acc;
+			}
+		}
+	}
+
+	pos_val.i = ab_vpos->elemc;
+	vector_insert(ab_vptr, pos_val);
+	hyper->elemc = ab_vpos->elemc;
+//	vector_printi(ab_vptr);
+//	vector_printi(ab_vpos);
+	hyper->vptr = vector2int(ab_vptr);
+	hyper->vpos = vector2int(ab_vpos);
+
+	return hyper;
+}
+
+
+
 
 hbmat_t* hb2hbh_sym_etree(hbmat_t *A, int b, int* etree){
 	int m = A->m; int n = A->n; int elemc = A->elemc;
@@ -1221,119 +1344,6 @@ hbmat_t *hb2csr(hbmat_t *A){
 	return B;
 }
 
-hbmat_t *hb2hbh(hbmat_t *A, int b) {
-	hbmat_t *Ab = (hbmat_t*) malloc( sizeof(hbmat_t) );
-
-	int m = A->m;
-	int n = A->n;
-	int *vptr = A->vptr;
-	int *vpos = A->vpos;
-	//double *vval = A->vval;
-
-	int M = ( m + b - 1 ) / b;
-	int N = ( n + b - 1 ) / b;
-
-	Ab->m = M; Ab->n = N;
-	Ab->vdiag = NULL;
-	Ab->vptr = (int*) malloc( sizeof(int) * ( N + 1 ) );
-
-	vector_t *rfront = vector_create();
-	vector_t *relemc = vector_create();
-	hbmat_t *acchb = (hbmat_t*) malloc( sizeof(hbmat_t) * M * N );
-	int acc = 0;
-
-	if ( M==0 || N==0 ) {
-		fprintf( stderr, "block size %i too large\n", b);
-	}
-
-	//printf("M %i N %i\n", M, N);
-
-	int J;
-	for ( J = 0; J < N; J++ ) {
-		vector_clear(rfront);
-		vector_clear(relemc);
-		
-		int jstart = J * b;
-		int jc = n - jstart;
-		jc = jc < b? jc: b;
-		int j;
-		for ( j = 0; j < jc; j++ ) {
-			vel_t vel;
-			vel.i = vptr[j] - 1;
-			vector_insert( rfront, vel );
-			vel.i = 0;
-			vector_insert( relemc, vel );
-		}
-			
-		Ab->vptr[J] = acc+1;
-		int border = b;
-		int I;	
-		for ( I = 0; I < M; I++ ) {
-			//printf("block (%i,%i)\n", I, J);
-			hbmat_t *cB = NULL;  
-			vector_t *accvpos = NULL;
-			vector_t *accvval = NULL;
-
-			int col = J * b;
-			for ( j = 0 ; j < jc; j++ ) {
-				int elemc = vector_get(relemc, j).i;
-				int cnt = vptr[col+1] - vptr[col];
-				int r = vpos[ vector_get( rfront, j ).i ];
-				//printf("\tcol %i (%i) border %i initr %i\n", j, cnt, border, r);
-
-				while ( r <= border && elemc<cnt) {
-					//printf("\t\t%i\n", r);
-
-					if ( cB == NULL ) {
-						cB = &acchb[acc++];
-						accvpos = vector_create();
-						accvval = vector_create();
-						cB->m = cB->n = b;
-						cB->elemc = 0;
-						cB->vptr = (int*) malloc( sizeof(int) * b );
-					}
-			
-					int frontier = vector_get( rfront, j ).i;
-					vel_t vel;
-					vel.i = ++frontier;
-					vector_insertat( rfront, vel, j);
-					r = vpos[frontier];
-
-					vel.i = r % M;
-					vector_insert( accvpos, vel );
-					++cB->elemc;
-					++elemc;
-				}
-
-				vel_t vel;
-				vel.i = elemc;
-				vector_insertat( relemc, vel, j);
-				col++;	
-			}
-
-			if ( cB != NULL ) {
-				cB->vval = vector2double(accvval);
-				cB->vpos = vector2int(accvpos);
-			}
-
-			border += b;
-		}
-	}
-
-	Ab->vptr[J] = acc+1;
-	hbmat_t* aaa = (hbmat_t*)(Ab->vval);
-	aaa = acchb;
-	Ab->vval = (void *) aaa;
-	//Ab->vpos = (int*) vector2int(accvpos);
-	Ab->elemc = acc;
-	//printf("address acchb %p\n", acchb);
-	//for(int i=0; i< M*N; i++)
-	//	printf("acchb[%d] sub adress : %p\n", i, &acchb[i]);
-	//printf("address Ab->vval %p\n", (hbmat_t*)Ab->vval);
-
-	return Ab;
-}
-
 void hb_free(hbmat_t *A){
 	free(A->vptr); free(A->vpos);
 	free(A->vval);
@@ -1351,6 +1361,18 @@ void hbh_free(hbmat_t *A){
 	hb_free(A);
 }
 
+void hbh_free2(hbmat_t *A){
+
+	pthread_mutex_destroy(A->mtx);
+	int elemc = A->elemc;
+	free(A->e_tree);
+	free(((hbmat_t**)A->vval)[0]);
+	free(A->vptr_pool);
+	free(A->vpos_pool);
+	free(A->vval_pool);
+	hb_free(A);
+
+}
 
 hbmat_t *hb2hbb(hbmat_t *A, int b) {
 	//printf("hb2hbb %p %i\n", A, b);

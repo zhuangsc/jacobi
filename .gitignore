@@ -1,0 +1,15 @@
+Makefile.in
+Makefile
+src/Makefile.in
+src/Makefile
+src/config.*
+build/
+configure
+config.*
+depcomp
+missing
+install-sh
+autom4te*
+aclocal.m4
+compile
+*.sh

@@ -918,7 +918,7 @@ void hyper_sym_csr_task2(hbmat_t *block){
 
 
 void hb2hbh_csr_task(int I, int J, hbmat_t *A, int b, int *entry, hbmat_t *block){
-	int m = A->m;
+	int m = A->m; int n = A->n;
 	int* vptr = A->vptr; int* vpos = A->vpos; 
 	double* vval = A->vval;
 	int brow = I*b; int erow = (I+1)*b;
@@ -938,7 +938,7 @@ void hb2hbh_csr_task(int I, int J, hbmat_t *A, int b, int *entry, hbmat_t *block
 		
 		//Padding
 		if ( L >= m ) {
-			if ( ecol < m )
+			if ( ecol < n )
 				continue;
 			pos_val.i = L - bcol;
 			vector_insert(ab_vpos, pos_val);
@@ -949,7 +949,6 @@ void hb2hbh_csr_task(int I, int J, hbmat_t *A, int b, int *entry, hbmat_t *block
 
 		int p_elemc = ab_vpos->elemc;
 		for ( int k = vptr[L]; k < vptr[L+1]; ++k ) {
-
 			if ( vpos[k] >= bcol && vpos[k] < ecol){
 				pos_val.i = vpos[k] - bcol;
 				vector_insert(ab_vpos, pos_val);
@@ -972,13 +971,67 @@ void hb2hbh_csr_task(int I, int J, hbmat_t *A, int b, int *entry, hbmat_t *block
 	}
 }
 
-hbmat_t* hb2hbh(hbmat_t *A, int b){
+void hb2hbh_csc_task(int I, int J, hbmat_t *A, int b, int *entry, hbmat_t *block){
+	int m = A->m ;int n = A->n;
+	int* vptr = A->vptr; int* vpos = A->vpos; 
+	double* vval = A->vval;
+	int brow = I*b; int erow = (I+1)*b;
+	int bcol = J*b; int ecol = (J+1)*b;
+
+	vector_t* ab_vptr = vector_create();
+	vector_t* ab_vpos = vector_create();
+	vector_t* ab_vval = vector_create();
+	vector_clear(ab_vptr); vector_clear(ab_vpos); vector_clear(ab_vval);
+	vel_t pos_val;
+
+	*entry = 0;
+
+	for ( int L = bcol; L < ecol; ++L ) {
+		pos_val.i = ab_vpos->elemc; 
+		vector_insert(ab_vptr, pos_val);
+		
+		//Padding
+		if ( L >= n ) {
+			if ( erow < m )
+				continue;
+			pos_val.i = L - brow;
+			vector_insert(ab_vpos, pos_val);
+			pos_val.d = 1;
+			vector_insert(ab_vval, pos_val);
+			continue;
+		}
+
+		int p_elemc = ab_vpos->elemc;
+		for ( int k = vptr[L]; k < vptr[L+1]; ++k ) {
+			if ( vpos[k] >= brow && vpos[k] < erow){
+				pos_val.i = vpos[k] - brow;
+				vector_insert(ab_vpos, pos_val);
+				pos_val.d = vval[k];
+				vector_insert(ab_vval, pos_val);
+			}
+		}
+	}
+
+	pos_val.i = ab_vpos->elemc;
+	vector_insert(ab_vptr, pos_val);
+
+	if ( ab_vpos->elemc ){
+		block->m = b; block->n = b; block->elemc = ab_vpos->elemc;
+		block->vdiag = NULL;
+		block->vptr = vector2int(ab_vptr); 
+		block->vpos = vector2int(ab_vpos);
+		block->vval = vector2double(ab_vval);
+		*entry = 1;
+	}
+}
+
+hbmat_t* hb2hbh(hbmat_t *A, int b, int is_csr){
 
 	int m = A->m; int n = A->n; int elemc = A->elemc;
 	int *vptr = A->vptr; int *vpos = A->vpos; double* vval = A->vval;
 	int M = ( m + b - 1 ) / b;
 	int N = ( n + b - 1 ) / b;
-	int num = ((1 + M) * N) / 2;
+	int num = M * N;
 
 	hbmat_t* hyper = malloc(sizeof(hbmat_t));
 	hyper->m = M; hyper->n = N; hyper->vdiag = NULL;
@@ -997,12 +1050,22 @@ hbmat_t* hb2hbh(hbmat_t *A, int b){
 
 	for(int i = 0; i < num; ++i)
 		hbmat_array[i] = malloc(sizeof(hbmat_t));
+
 	int acc = 0;
 	int I, J;
-	for ( I = 0; I < M; ++I ){
-		for ( J = 0; J < I+1; ++J){
-			hb2hbh_csr_task(I, J, A, b, &(hentry[acc]), hbmat_array[acc]);
-			++acc;
+	if (is_csr){
+		for ( I = 0; I < M; ++I ) {
+			for ( J = 0; J < N; ++J ) {
+				hb2hbh_csr_task(I, J, A, b, &(hentry[acc]), hbmat_array[acc]);
+				++acc;
+			}
+		}
+	}else{
+		for ( J = 0; J < N; ++J ) {
+			for ( I = 0; I < M; ++I ) {
+				hb2hbh_csc_task(I, J, A, b, &(hentry[acc]), hbmat_array[acc]);
+				++acc;
+			}
 		}
 	}
 
@@ -1010,19 +1073,38 @@ hbmat_t* hb2hbh(hbmat_t *A, int b){
 
 	acc = 0;
 	int acc0 = 0;
-	for ( I = 0; I < M; ++I ) {
-		pos_val.i = ab_vpos->elemc;
-		vector_insert(ab_vptr, pos_val);
-		for ( J = 0; J < I+1; ++J ) {
-			if ( hentry[acc] ) {
-				pos_val.i = J;
-				vector_insert(ab_vpos, pos_val);
-				((hbmat_t**)hyper->vval)[acc0] = hbmat_array[acc];
-				++acc;
-				++acc0;
-			} else {
-				free(hbmat_array[acc]);
-				++acc;
+	if ( is_csr ){
+		for ( I = 0; I < M; ++I ) {
+			pos_val.i = ab_vpos->elemc;
+			vector_insert(ab_vptr, pos_val);
+			for ( J = 0; J < N; ++J ) {
+				if ( hentry[acc] ) {
+					pos_val.i = J;
+					vector_insert(ab_vpos, pos_val);
+					((hbmat_t**)hyper->vval)[acc0] = hbmat_array[acc];
+					++acc;
+					++acc0;
+				} else {
+					free(hbmat_array[acc]);
+					++acc;
+				}
+			}
+		}
+	} else {
+		for ( J = 0; J < N; ++J ) {
+			pos_val.i = ab_vpos->elemc;
+			vector_insert(ab_vptr, pos_val);
+			for ( I = 0; I < M; ++I ) {
+				if ( hentry[acc] ) {
+					pos_val.i = I;
+					vector_insert(ab_vpos, pos_val);
+					((hbmat_t**)hyper->vval)[acc0] = hbmat_array[acc];
+					++acc;
+					++acc0;
+				} else {
+					free(hbmat_array[acc]);
+					++acc;
+				}
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 SUBDIRS = matutil
 
-jacobi_sources = jacobi_setup.c
+jacobi_sources = jacobi.c jacobi_setup.c
 jacobi_headers = jacobi_setup.h
 
 bin_PROGRAMS = jacobi

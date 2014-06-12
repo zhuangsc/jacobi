@@ -95,7 +95,7 @@ static inline void __attribute__((always_inline)) hbmat_deepfree(hbmat_t *m) {
 
 
 extern int * get_sdpos(hbmat_t * A);
-extern hbmat_t* hb2hbh(hbmat_t *A, int b);
+extern hbmat_t* hb2hbh(hbmat_t *A, int b, int is_csr);
 extern hbmat_t* hb2hbb(hbmat_t *A, int b);
 extern hbmat_t* hb2csr(hbmat_t *A);
 extern hbmat_t* hb_cp(hbmat_t *A);

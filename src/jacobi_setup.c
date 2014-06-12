@@ -1,6 +1,11 @@
 #include "jacobi_setup.h"
 
-int main(int argc, char** argv){
+extern void *Ahb;
+extern void *Ahbh;
+extern int format;
+extern int bs;
+
+int jacobi_setup(int argc, char* argv[]){
 
 	if(argc != 4){
 		printf("Usage %s [filename] [block size] [csc(0)/csr(1)]\n", argv[0]);
@@ -10,8 +15,8 @@ int main(int argc, char** argv){
 	int bs = atoi(argv[2]);
 	int format = atoi(argv[3]);
 
-	hbmat_t *L_csr, *L_csc, *L, *A, *A_csr, *A0;
-	A = (hbmat_t*) malloc(sizeof(hbmat_t));
+	Ahb = (hbmat_t*) malloc(sizeof(hbmat_t));
+	hbmat_t *A = Ahb;
 
 	unsigned long elapsed = 0;
 	readHB_newmat_double(matrix_file, &(A->m), &(A->n), &(A->elemc), &(A->vptr), &(A->vpos), (double **)&(A->vval));
@@ -19,16 +24,21 @@ int main(int argc, char** argv){
 	gettimeofday(&start, NULL);
 
 	one2zero(A);
-	hb_print_CSC2("A000.dat", A);
+	hb_print_CSC2("A000.dat", Ahb);
 
-	L = hb2hbh(A,bs);
+	Ahbh = hb2hbh(A, bs, format);
 
-	A0 = hbh2hb(L);
+	hbmat_t *A0;
+	A0 = hbh2hb(Ahbh);
 	hb_print_CSC2("L000.dat", A0);
-	hbh_free(L);
 	hb_free(A0);
-	hb_free(A);
+
 	return 0;
+}
+
+void jacobi_shutdown(){
+	hb_free(Ahb);
+	hbh_free(Ahbh);
 }
 
 void print_matrix(const hbmat_t* matrix_info, int h, char* name){

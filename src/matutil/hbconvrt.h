@@ -26,7 +26,10 @@ hbmat_t* hbb2csrb(hbmat_t *A);
 #pragma omp task in([1]A) out([1]entry, [1]block)
 void hb2hbh_csr_task(int I, int J, hbmat_t *A, int b, int *entry, hbmat_t *block);
 
-hbmat_t* hb2hbh(hbmat_t *A, int b);
+#pragma omp task in([1]A) out([1]entry, [1]block)
+void hb2hbh_csc_task(int I, int J, hbmat_t *A, int b, int *entry, hbmat_t *block);
+
+hbmat_t* hb2hbh(hbmat_t *A, int b, int is_csr);
 
 //hbmat_t* ll2b(hbmatm_t *A);
 //hbmatm_t* b2ll(hbmat_t *A);

@@ -22,7 +22,18 @@ int jacobi_setup (int argc, char* argv[]) {
 	int dim = A->m;
 	v_b = malloc(dim * sizeof(double));
 	v_x = malloc(dim * sizeof(double));
+	v_x0 = calloc(dim, sizeof(double));
 	result_gen(v_x, dim);
+	mkl_cspblas_dcsrgemv("N", &dim, A->vval, A->vptr, A->vpos, v_x, v_b);
+
+#if 0
+	for (int i = 0; i < dim; ++i)
+		printf("%lf \n", v_x[i]);
+	puts("");
+	for (int i = 0; i < dim; ++i)
+		printf("%lf \n", v_b[i]);
+	puts("");
+#endif
 
 	one2zero(A);
 	hb_print_CSC2("A000.dat", Ahb);
@@ -72,4 +83,3 @@ void print_matrix (const hbmat_t* matrix_info, int h, char* name) {
 	}
 	printf("\n");
 }
-

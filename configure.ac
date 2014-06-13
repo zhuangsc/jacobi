@@ -4,7 +4,7 @@
 AC_PREREQ(2.59)
 AC_INIT([Jacobi],[1.0],[sicong.zhuang@bsc.es])
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([src/jacobi_setup.c])
+AC_CONFIG_SRCDIR([src/jacobi.c])
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADER([src/config.h])
 AC_CONFIG_FILES([Makefile 

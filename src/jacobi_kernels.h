@@ -66,6 +66,4 @@ void dgemm_sparse_csr(hbmat_t* A, hbmat_t* B, hbmat_t* C);
 #pragma omp task in([1]A) inout([1]B)
 void dtrsm_sparse_csr(hbmat_t* A, hbmat_t* B);
 
-void dgemv_sparse_csr(hbmat_t* A, double *x, double *b);
-
 #endif

@@ -1,12 +1,12 @@
-SUBDIRS = sparse_kernels matutil 
+SUBDIRS = matutil 
 
-jacobi_sources = jacobi.c jacobi_setup.c
-jacobi_headers = jacobi_setup.h
+jacobi_sources = jacobi.c jacobi_setup.c jacobi_kernels.c
+jacobi_headers = jacobi_setup.h jacobi_kernels.h
 
 bin_PROGRAMS = jacobi
 
 # Jacobi
 jacobi_SOURCES = $(jacobi_sources) $(jacobi_headers)
-jacobi_LDFLAGS = $(LAPACK_LIBS) $(BLAS_LIBS) $(LIBS) #-L/home/szhuang/mnt/Experiments/algebra/cholesky/build/lib -lompsschol
-jacobi_CFLAGS = $(OMPSS_CFLAGS) -I$(srcdir)/matutil -I$(srcdir)/util -I$(srcdir)/sparse_kernels #-I/home/szhuang/mnt/Experiments/algebra/cholesky/build/include
-jacobi_LDADD = $(builddir)/matutil/libmatutil.la $(builddir)/sparse_kernels/libskernels.la
+jacobi_LDFLAGS = $(LAPACK_LIBS) $(BLAS_LIBS) $(LIBS)
+jacobi_CFLAGS = $(OMPSS_CFLAGS) -I$(srcdir)/matutil -I$(srcdir)/util
+jacobi_LDADD = $(builddir)/matutil/libmatutil.la 

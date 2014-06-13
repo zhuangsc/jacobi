@@ -1117,9 +1117,23 @@ hbmat_t* hb2hbh(hbmat_t *A, int b, int is_csr){
 	hyper->vptr = vector2int(ab_vptr);
 	hyper->vpos = vector2int(ab_vpos);
 
+	set_diag(hyper);
+
 	return hyper;
 }
 
+void set_diag(hbmat_t *A){
+	int m = A->m; int n = A->n;
+	int *vdiag = calloc(n, sizeof(int));
+	A->vdiag = vdiag;
+	int *vptr = A->vptr; int *vpos = A->vpos;
+	for (int j = 0; j < n; ++j) {
+		for (int k = vptr[j]; k < vptr[j+1]; ++k) {
+			if (vpos[k] == j)
+				vdiag[j] = k;
+		}
+	}
+}
 
 
 

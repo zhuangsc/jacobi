@@ -19,6 +19,9 @@ int jacobi_setup (int argc, char* argv[]) {
 
 	readHB_newmat_double(matrix_file, &(A->m), &(A->n), &(A->elemc), &(A->vptr), &(A->vpos), (double **)&(A->vval));
 
+	one2zero(A);
+	hb_print_CSC2("A000.dat", Ahb);
+
 	int dim = A->m;
 	v_b = malloc(dim * sizeof(double));
 	v_x = malloc(dim * sizeof(double));
@@ -33,13 +36,13 @@ int jacobi_setup (int argc, char* argv[]) {
 	for (int i = 0; i < dim; ++i)
 		printf("%lf \n", v_b[i]);
 	puts("");
+	Ahbh = hb2hbh(A, bs, format);
+	hbmat_t *A1 = Ahbh;
+	for (int i = 0; i < A1->n; ++i)
+		printf("%d\n", (A1->vdiag)[i]);
 #endif
 
-	one2zero(A);
-	hb_print_CSC2("A000.dat", Ahb);
-
 	Ahbh = hb2hbh(A, bs, format);
-
 	hbmat_t *A0;
 	A0 = hbh2hb(Ahbh);
 	hb_print_CSC2("L000.dat", A0);

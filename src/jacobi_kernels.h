@@ -1,5 +1,5 @@
-#ifndef __CHOLS_KERNELS_H__
-#define __CHOLS_KERNELS_H__
+#ifndef __JACOBI_KERNELS_H__
+#define __JACOBI_KERNELS_H__
 
 
 #include <stdio.h>

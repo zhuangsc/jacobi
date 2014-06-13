@@ -312,3 +312,20 @@ void dtrsm_sparse_csr(hbmat_t* A, hbmat_t* C){
 
 	free(peelb); free(peelc);
 }
+
+void jacobi_dgemv_csr(hbmat_t *A, double *X, double *B, int J, int bs ) {
+	int m = A->m; int n = A->n;
+	int *vptr = A->vptr; int *vpos = A->vpos; double *vval = A->vval;
+	int bcol = J * bs;
+	char* trans = "N";
+	double alpha = 1; double beta = 1;
+	char* matdescra = "GLNC";
+	mkl_dcscmv(trans, &m, &n, &alpha, matdescra, vval, vpos, vptr, vptr+1, X[bcol], &beta, B);
+}
+
+void jacobi_dsubvv( double *A, double *B , int J, int bs ) {
+	int bcol = J * bs;
+	for ( int i = 0; i < bs; ++i ) {
+		B[i] = A[bcol+i] - B[i];
+	}
+}

@@ -1,4 +1,4 @@
-#include "chols_kernels.h"
+#include "jacobi_kernels.h"
 
 
 void potrf_sparse(hbmat_t* A) {
@@ -142,7 +142,7 @@ void dtrsm_sparse(hbmat_t* A, hbmat_t* C){
 	hb_free(C_csr);
 }
 
-void potrf_sparse_upper(hbmat_t* A) {
+void potrf_sparse_csr(hbmat_t* A) {
 
 	/*
 	 * Check if the input matrix has properly set
@@ -207,7 +207,7 @@ void potrf_sparse_upper(hbmat_t* A) {
 	}
 }
 
-void dsyrk_sparse_upper(hbmat_t* A, hbmat_t* C){
+void dsyrk_sparse_csr(hbmat_t* A, hbmat_t* C){
 
 	/*
 	 * Check if the input matrix has properly set
@@ -242,7 +242,7 @@ void dsyrk_sparse_upper(hbmat_t* A, hbmat_t* C){
 	free(peela); free(peelc);
 }
 
-void dgemm_sparse_upper(hbmat_t* A, hbmat_t* B, hbmat_t* C){
+void dgemm_sparse_csr(hbmat_t* A, hbmat_t* B, hbmat_t* C){
 
 	/*
 	 * Check if the input matrix has properly set
@@ -281,7 +281,7 @@ void dgemm_sparse_upper(hbmat_t* A, hbmat_t* B, hbmat_t* C){
 	free(peelb); free(peelc);
 }
 
-void dtrsm_sparse_upper(hbmat_t* A, hbmat_t* C){
+void dtrsm_sparse_csr(hbmat_t* A, hbmat_t* C){
 
 	/*
 	 * Check if the input matrix has properly set
@@ -311,4 +311,13 @@ void dtrsm_sparse_upper(hbmat_t* A, hbmat_t* C){
 	}
 
 	free(peelb); free(peelc);
+}
+
+void dgemv_sparse_csr(hbmat_t* A, double* x, double* b){
+
+	int m = A->m;
+	int *vptr = A->vptr; int *vpos = A->vpos; double *vval = A->vval;
+	char* trans = "N";
+	mkl_cspblas_dcsrgemv(trans, &m, vval, vptr, vpos, x, b);
+
 }

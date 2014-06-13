@@ -9,7 +9,7 @@
 #include "vector.h"
 #include "hbconvrt.h"
 
-//#include "mkl.h"
+#include "mkl.h"
 
 
 static inline void __attribute__((always_inline)) array_d2s(hbmat_t* A, double* peel, int col) {
@@ -56,15 +56,17 @@ void dgemm_sparse(hbmat_t* A, hbmat_t* B, hbmat_t* C);
 void dtrsm_sparse(hbmat_t* A, hbmat_t* B);
 
 #pragma omp task inout([1]A) priority(4)
-void potrf_sparse_upper(hbmat_t* A);
+void potrf_sparse_csr(hbmat_t* A);
 
 #pragma omp task in([1]A) inout([1]B) priority(3)
-void dsyrk_sparse_upper(hbmat_t* A, hbmat_t* B);
+void dsyrk_sparse_csr(hbmat_t* A, hbmat_t* B);
 
 #pragma omp task in([1]A, [1]B) inout([1]C)
-void dgemm_sparse_upper(hbmat_t* A, hbmat_t* B, hbmat_t* C);
+void dgemm_sparse_csr(hbmat_t* A, hbmat_t* B, hbmat_t* C);
 
 #pragma omp task in([1]A) inout([1]B)
-void dtrsm_sparse_upper(hbmat_t* A, hbmat_t* B);
+void dtrsm_sparse_csr(hbmat_t* A, hbmat_t* B);
+
+void dgemv_sparse_csr(hbmat_t* A, double *x, double *b);
 
 #endif

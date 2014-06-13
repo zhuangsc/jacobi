@@ -13,7 +13,6 @@
 #include "matutil/iohb.h"
 
 int jacobi_setup(int argc, char* argv[]);
-
 void jacobi_shutdown();
 
 #endif 

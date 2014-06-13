@@ -4,25 +4,25 @@ extern void *Ahb;
 extern void *Ahbh;
 extern double *v_b;
 extern double *v_x;
+extern double *v_x0;
 extern int format;
 extern int bs;
 
-int jacobi_setup(int argc, char* argv[]){
+int jacobi_setup (int argc, char* argv[]) {
 
 	char* matrix_file = argv[1];
 	int bs = atoi(argv[2]);
 	int format = atoi(argv[3]);
-	char* vector_file = argv[4];
 
 	Ahb = (hbmat_t*) malloc(sizeof(hbmat_t));
 	hbmat_t *A = Ahb;
 
 	readHB_newmat_double(matrix_file, &(A->m), &(A->n), &(A->elemc), &(A->vptr), &(A->vpos), (double **)&(A->vval));
 
-	if ( read_vector_double(vector_file, v_b) ){
-		printf("Error opening the vector file\n");
-		return 1;
-	}
+	int dim = A->m;
+	v_b = malloc(dim * sizeof(double));
+	v_x = malloc(dim * sizeof(double));
+	result_gen(v_x, dim);
 
 	one2zero(A);
 	hb_print_CSC2("A000.dat", Ahb);
@@ -37,12 +37,19 @@ int jacobi_setup(int argc, char* argv[]){
 	return 0;
 }
 
-void jacobi_shutdown(){
+void jacobi_shutdown () {
 	hb_free(Ahb);
 	hbh_free(Ahbh);
 }
 
-void print_matrix(const hbmat_t* matrix_info, int h, char* name){
+void result_gen (double *vector, int length) {
+	srand48(time(0));
+	for(int i = 0; i < length; ++i){
+		vector[i] = drand48() * 50;
+	}
+}
+
+void print_matrix (const hbmat_t* matrix_info, int h, char* name) {
 	double* value = (double*) matrix_info->vval;
 	hbmat_t** address = matrix_info->vval;
 	printf("------------------------------------\n");
@@ -66,9 +73,3 @@ void print_matrix(const hbmat_t* matrix_info, int h, char* name){
 	printf("\n");
 }
 
-int read_vector_double(char* vector_file, double *vector){
-	FILE *vf = NULL;
-	vf = fopen(vector_file, "r");
-	if ( vf == NULL )
-		return 1;
-}

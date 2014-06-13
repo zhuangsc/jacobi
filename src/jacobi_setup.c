@@ -2,26 +2,27 @@
 
 extern void *Ahb;
 extern void *Ahbh;
+extern double *v_b;
+extern double *v_x;
 extern int format;
 extern int bs;
 
 int jacobi_setup(int argc, char* argv[]){
 
-	if(argc != 4){
-		printf("Usage %s [filename] [block size] [csc(0)/csr(1)]\n", argv[0]);
-		exit(1);
-	}
 	char* matrix_file = argv[1];
 	int bs = atoi(argv[2]);
 	int format = atoi(argv[3]);
+	char* vector_file = argv[4];
 
 	Ahb = (hbmat_t*) malloc(sizeof(hbmat_t));
 	hbmat_t *A = Ahb;
 
-	unsigned long elapsed = 0;
 	readHB_newmat_double(matrix_file, &(A->m), &(A->n), &(A->elemc), &(A->vptr), &(A->vpos), (double **)&(A->vval));
-	struct timeval start, stop;
-	gettimeofday(&start, NULL);
+
+	if ( read_vector_double(vector_file, v_b) ){
+		printf("Error opening the vector file\n");
+		return 1;
+	}
 
 	one2zero(A);
 	hb_print_CSC2("A000.dat", Ahb);
@@ -63,4 +64,11 @@ void print_matrix(const hbmat_t* matrix_info, int h, char* name){
 		}
 	}
 	printf("\n");
+}
+
+int read_vector_double(char* vector_file, double *vector){
+	FILE *vf = NULL;
+	vf = fopen(vector_file, "r");
+	if ( vf == NULL )
+		return 1;
 }

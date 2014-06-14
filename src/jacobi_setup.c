@@ -22,6 +22,11 @@ int jacobi_setup (int argc, char* argv[]) {
 	one2zero(A);
 	hb_print_CSC2("A000.dat", Ahb);
 
+	int *work = malloc(A->m * sizeof(int));
+	hbmat_t *ttt;
+	ttt = ompss_csr_dchol_ll(bs, Ahb, work);
+	print_matrix(ttt,1,"ttt");
+
 	int dim = A->m;
 	v_b = malloc(dim * sizeof(double));
 	v_x = malloc(dim * sizeof(double));
@@ -43,10 +48,10 @@ int jacobi_setup (int argc, char* argv[]) {
 #endif
 
 	Ahbh = hb2hbh(A, bs, format);
-	hbmat_t *A0;
-	A0 = hbh2hb(Ahbh);
-	hb_print_CSC2("L000.dat", A0);
-	hb_free(A0);
+//	hbmat_t *A0;
+//	A0 = hbh2hb(Ahbh);
+//	hb_print_CSC2("L000.dat", A0);
+//	hb_free(A0);
 
 	return 0;
 }
@@ -61,28 +66,4 @@ void result_gen (double *vector, int length) {
 	for(int i = 0; i < length; ++i){
 		vector[i] = drand48() * 50;
 	}
-}
-
-void print_matrix (const hbmat_t* matrix_info, int h, char* name) {
-	double* value = (double*) matrix_info->vval;
-	hbmat_t** address = matrix_info->vval;
-	printf("------------------------------------\n");
-	printf("\t Displaying : %s\n", name);
-	printf("Rows = %d,Columns = %d,Non-zeros = %d\n",matrix_info->m,matrix_info->n,matrix_info->elemc);
-	printf("Virtual Address = %p\n", matrix_info);
-	for (int i = 0; i <= matrix_info->n; i++)
-		printf("%d ", matrix_info->vptr[i]);
-	printf("\n");
-	for (int j = 0; j < matrix_info->elemc; j++)
-		printf("%d ", matrix_info->vpos[j]);
-	printf("\n");
-	for (int j = 0; j < matrix_info->elemc; j++){
-		if(h == 0)
-			printf("%f ", value[j]);
-		else{
-			printf("vval[%d]: %p\n", j, address[j]);
-			print_matrix(address[j],0,"");
-		}
-	}
-	printf("\n");
 }

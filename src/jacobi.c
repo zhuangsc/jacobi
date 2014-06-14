@@ -1,5 +1,6 @@
 
 #include "jacobi_setup.h"
+#include "jacobi_main.h"
 
 void *Ahb;
 void *Ahbh;
@@ -20,6 +21,8 @@ int main(int argc, char* argv[]){
 		printf("Unable to proceed, exit\n");
 		exit(1);
 	}
+
+	jacobi_main_csr(Ahbh, v_x0, v_b, bs);
 
 	jacobi_shutdown();
 

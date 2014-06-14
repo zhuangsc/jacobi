@@ -42,28 +42,32 @@ static inline void __attribute__((always_inline)) array_clear(double* peel, int 
 void test_print_matrix(const hbmat_t*, int, char*);
 void hbcopy(hbmat_t*, hbmat_t*);
 
-#pragma omp task inout([1]A) priority(1)
-void potrf_sparse(hbmat_t* A);
+//#pragma omp task inout([1]A) priority(1)
+//void potrf_sparse(hbmat_t* A);
+//
+//#pragma omp task in([1]A) inout([1]B) priority(2)
+//void dsyrk_sparse(hbmat_t* A, hbmat_t* B);
+//
+//#pragma omp task in([1]A, [1]B) inout([1]C)
+//void dgemm_sparse(hbmat_t* A, hbmat_t* B, hbmat_t* C);
+//
+//#pragma omp task in([1]A) inout([1]B)
+//void dtrsm_sparse(hbmat_t* A, hbmat_t* B);
+//
+//#pragma omp task inout([1]A) priority(4)
+//void potrf_sparse_csr(hbmat_t* A);
+//
+//#pragma omp task in([1]A) inout([1]B) priority(3)
+//void dsyrk_sparse_csr(hbmat_t* A, hbmat_t* B);
+//
+//#pragma omp task in([1]A, [1]B) inout([1]C)
+//void dgemm_sparse_csr(hbmat_t* A, hbmat_t* B, hbmat_t* C);
+//
+//#pragma omp task in([1]A) inout([1]B)
+//void dtrsm_sparse_csr(hbmat_t* A, hbmat_t* B);
 
-#pragma omp task in([1]A) inout([1]B) priority(2)
-void dsyrk_sparse(hbmat_t* A, hbmat_t* B);
-
-#pragma omp task in([1]A, [1]B) inout([1]C)
-void dgemm_sparse(hbmat_t* A, hbmat_t* B, hbmat_t* C);
-
-#pragma omp task in([1]A) inout([1]B)
-void dtrsm_sparse(hbmat_t* A, hbmat_t* B);
-
-#pragma omp task inout([1]A) priority(4)
-void potrf_sparse_csr(hbmat_t* A);
-
-#pragma omp task in([1]A) inout([1]B) priority(3)
-void dsyrk_sparse_csr(hbmat_t* A, hbmat_t* B);
-
-#pragma omp task in([1]A, [1]B) inout([1]C)
-void dgemm_sparse_csr(hbmat_t* A, hbmat_t* B, hbmat_t* C);
-
-#pragma omp task in([1]A) inout([1]B)
-void dtrsm_sparse_csr(hbmat_t* A, hbmat_t* B);
-
+void jacobi_dgemv_csr(hbmat_t *A, double *X, double *B);
+void jacobi_dsubvv(double *A, double *B , int J, int bs);
+void jacobi_dtrsm_csr(hbmat_t *A, double *X, double *Y);
+void jacobi_dtrsmt_csr(hbmat_t *A, double *X, double *Y);
 #endif

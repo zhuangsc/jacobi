@@ -6,12 +6,12 @@
 #include <time.h>
 #include <sys/time.h>
 #include <math.h>
-//#include "ompss_cholesky.h"
 
-#include "hb.h"
-#include "hbconvrt.h"
-#include "iohb.h"
+#include "matutil/hb.h"
+#include "matutil/hbconvrt.h"
+#include "matutil/iohb.h"
 #include "mkl.h"
+#include "ompss_cholesky.h"
 
 int jacobi_setup(int argc, char* argv[]);
 void jacobi_shutdown();

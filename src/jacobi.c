@@ -1,4 +1,4 @@
-
+#include <math.h>
 #include "jacobi_setup.h"
 #include "jacobi_main.h"
 
@@ -28,14 +28,25 @@ int main(int argc, char* argv[]){
 	jacobi_main_csr(Ahbh, v_x0, v_b, bs);
 
 	printf("Converge at iteration: %ld\n", iter);
-	for(int i = 0; i < dim0; ++i) 
-		printf("%lf ", v_x[i]);
-	puts("\n\n");
-	for(int i = 0; i < dim0; ++i) 
-		printf("%lf ", v_x0[i]);
-	puts("");
+	double x = 0;
+	double x0 = 0;
+//	for(int i = 0; i < dim0; ++i)
+//		printf("%lf, ", v_x[i]);
+//	puts("");
+//	for(int i = 0; i < dim0; ++i)
+//		printf("%lf, ", v_x0[i]);
+//	puts("");
 
-	jacobi_shutdown();
+	for(int i = 0; i < dim0; ++i) 
+		x += v_x[i] * v_x[i];
+	x = sqrt(x);
+	for(int i = 0; i < dim0; ++i) 
+		x0 += v_x0[i] * v_x0[i];
+	x0 = sqrt(x0);
+	printf("2-norm x: %lf, 2-norm x0: %lf\n", x, x0);
+	printf("2-norm : %lf\n", (x-x0)/x);
+
+//	jacobi_shutdown();
 
 	return 0;
 }

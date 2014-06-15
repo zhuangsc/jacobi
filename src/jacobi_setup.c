@@ -37,14 +37,14 @@ int jacobi_setup (int argc, char* argv[]) {
 	result_gen(v_x, dim);
 	mkl_cspblas_dcsrgemv("N", &dim0, A->vval, A->vptr, A->vpos, v_x, v_b);
 
-//#if 0
+#if 0
 	for (int i = 0; i < dim0; ++i)
 		printf("%lf ", v_x[i]);
 	puts("\n");
 	for (int i = 0; i < dim0; ++i)
 		printf("%lf ", v_b[i]);
 	puts("\n\n");
-//#endif
+#endif
 
 
 	return 0;

@@ -16,30 +16,44 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 	hbmat_t **diagL = malloc(N * sizeof(hbmat_t*) );
 	double *vtmp = malloc(bs * N * sizeof(int));
 	int *work = malloc(bs * sizeof(int));
-	double *x0 = malloc(bs * sizeof(double));
-	double *x1 = malloc(bs * sizeof(double));
-
 	for ( int j = 0; j < N; ++j ) {
 		hbmat_t** Mtmp;
 		Adiag = vval[vdiag[j]];
 		Mtmp = ompss_csr_dchol_ll(bs, Adiag, work);
 		diagL[j] = hbh2hb(Mtmp);
+//		print_matrix(diagL[j],0,"diagL");
 		hbh_free(Mtmp);
 	}
 	free(work);
-
 	puts("pass cholesky");
+
+#pragma omp taskwait
+
+	double *x0 = malloc(bs * sizeof(double));
+	double *x1 = malloc(bs * sizeof(double));
 	iter = 0;
 	while(1) {
 		++iter;
+		for(int k = 0; k < dim; ++k)
+			vtmp[k] = 0.0;
+
 		for ( int I = 0; I < N; ++I ) {
 			for ( int J = vptr[I]; J < vptr[I+1]; ++J ) {
 				if ( vpos[J] == I )
 					continue;
 				Acurrent = vval[J];
 				jacobi_dgemv_csr( Acurrent, &(x[vpos[J] * bs]), &(vtmp[I * bs]) );
+//				puts("------------------------");
+//				for ( int k = 0; k < dim; ++k)
+//					printf("%lf ",vtmp[k]);
+//				puts("");
+
 			}
 			jacobi_dsubvv( b, vtmp, I, bs );
+//			puts("++++++++++++++++++++++++");
+//			for ( int k = 0; k < dim; ++k)
+//				printf("%lf ",vtmp[k]);
+//			puts("");
 
 			/*
 			 *	A[i,i] * x[i] = vtmp[i]
@@ -62,15 +76,12 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 //		for ( int k = 0; k < dim; ++k)
 //			printf("%lf ",vtmp[k]);
 //		puts("");
-//		for ( int k = 0; k < dim; ++k)
-//			printf("%lf ",x[k]);
-//		puts("\n\n");
 
 		for ( int k = 0; k < dim; ++k) {
 			x[k] = vtmp[k];
 		}
 
-		if (converge || iter == 90000) 
+		if (converge || iter == 1000) 
 			break;
 	}
 

@@ -1457,6 +1457,8 @@ void hbh_free(hbmat_t *A){
 		free(((hbmat_t**)A->vval)[i]->vval);
 	}
 	free(((hbmat_t**)A->vval)[0]);
+	if (A->vdiag != NULL)
+		free(A->vdiag);
 	hb_free(A);
 }
 

@@ -31,13 +31,6 @@ int main(int argc, char* argv[]){
 	printf("Converged after %ld iterations\n", iter);
 	double x = 0;
 	double x0 = 0;
-//	for(int i = 0; i < dim0; ++i)
-//		printf("%lf, ", v_x[i]);
-//	puts("");
-//	for(int i = 0; i < dim0; ++i)
-//		printf("%lf, ", v_x0[i]);
-//	puts("");
-
 	for(int i = 0; i < dim0; ++i) 
 		x += v_x[i] * v_x[i];
 	x = sqrt(x);
@@ -47,7 +40,7 @@ int main(int argc, char* argv[]){
 	printf("2-norm x: %lf, 2-norm x0: %lf\n", x, x0);
 	printf("2-norm : %lf\n", (x-x0)/x);
 
-//	jacobi_shutdown();
+	jacobi_shutdown();
 
 	return 0;
 }

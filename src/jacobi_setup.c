@@ -53,6 +53,7 @@ int jacobi_setup (int argc, char* argv[]) {
 void jacobi_shutdown () {
 	hb_free(Ahb);
 	hbh_free(Ahbh);
+	free(v_b); free(v_x); free(v_x0);
 }
 
 void result_gen (double *vector, int length) {

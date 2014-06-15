@@ -24,7 +24,6 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 		diagL[j] = hbh2hb(Mtmp);
 		hbh_free(Mtmp);
 	}
-	free(work);
 
 	double *x0 = malloc(bs * sizeof(double));
 	double *x1 = malloc(bs * sizeof(double));
@@ -62,11 +61,6 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 			converge = 1;
 		}
 
-//		printf("Iter: %d\n", iter);
-//		for ( int k = 0; k < dim; ++k)
-//			printf("%lf ",vtmp[k]);
-//		puts("");
-
 		for ( int k = 0; k < dim; ++k) {
 			x[k] = vtmp[k];
 		}
@@ -75,6 +69,8 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 			break;
 	}
 
+	free(x0); free(x1);
+	free(work); free(vtmp);
 	return 0;
 }
 

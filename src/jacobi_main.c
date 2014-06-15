@@ -20,6 +20,7 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 		hbmat_t** Mtmp;
 		Adiag = vval[vdiag[j]];
 		Mtmp = ompss_csr_dchol_ll(bs, Adiag, work);
+#pragma omp taskwait
 		diagL[j] = hbh2hb(Mtmp);
 //		print_matrix(diagL[j],0,"diagL");
 		hbh_free(Mtmp);
@@ -73,6 +74,7 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 			converge = 1;
 		}
 
+//		printf("Iter: %d\n", iter);
 //		for ( int k = 0; k < dim; ++k)
 //			printf("%lf ",vtmp[k]);
 //		puts("");

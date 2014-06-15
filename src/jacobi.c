@@ -26,8 +26,9 @@ int main(int argc, char* argv[]){
 	}
 
 	jacobi_main_csr(Ahbh, v_x0, v_b, bs);
+#pragma omp taskwait
 
-	printf("Converge at iteration: %ld\n", iter);
+	printf("Converged at iteration: %ld\n", iter);
 	double x = 0;
 	double x0 = 0;
 //	for(int i = 0; i < dim0; ++i)

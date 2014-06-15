@@ -1072,7 +1072,7 @@ hbmat_t* hb2hbh(hbmat_t *A, int b, int is_csr){
 		}
 	}
 
-#pragma omp taskwait
+//#pragma omp taskwait
 
 	acc = 0;
 	int acc0 = 0;

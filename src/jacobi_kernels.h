@@ -38,7 +38,7 @@ static inline void __attribute__((always_inline)) array_clear(double* peel, int 
 	}
 }
 
-
+#if 0
 void test_print_matrix(const hbmat_t*, int, char*);
 void hbcopy(hbmat_t*, hbmat_t*);
 
@@ -65,6 +65,7 @@ void dgemm_sparse_csr(hbmat_t* A, hbmat_t* B, hbmat_t* C);
 
 #pragma omp task in([1]A) inout([1]B)
 void dtrsm_sparse_csr(hbmat_t* A, hbmat_t* B);
+#endif
 
 void jacobi_dgemv_csr(hbmat_t *A, double *X, double *B);
 void jacobi_dsubvv(double *A, double *B , int J, int bs);

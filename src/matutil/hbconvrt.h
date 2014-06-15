@@ -23,10 +23,10 @@ hbmat_t* hb2hbh_sym_etree(hbmat_t *A, int b, int* etree);
 hbmat_t *hb2hbb(hbmat_t *A, int b);
 hbmat_t* hbb2csrb(hbmat_t *A);
 
-#pragma omp task in([1]A) out([1]entry, [1]block)
+//#pragma omp task in([1]A) out([1]entry, [1]block)
 void hb2hbh_csr_task(int I, int J, hbmat_t *A, int b, int *entry, hbmat_t *block);
 
-#pragma omp task in([1]A) out([1]entry, [1]block)
+//#pragma omp task in([1]A) out([1]entry, [1]block)
 void hb2hbh_csc_task(int I, int J, hbmat_t *A, int b, int *entry, hbmat_t *block);
 
 hbmat_t* hb2hbh(hbmat_t *A, int b, int is_csr);

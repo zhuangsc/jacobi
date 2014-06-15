@@ -1,5 +1,6 @@
 #include "jacobi_kernels.h"
 
+#if 0
 void potrf_sparse(hbmat_t* A) {
 	int n = A->n;
 	int* vptr = A->vptr; int* vpos = A->vpos; 
@@ -305,6 +306,7 @@ void dtrsm_sparse_csr(hbmat_t* A, hbmat_t* C){
 
 	free(peelb); free(peelc);
 }
+#endif
 
 void jacobi_dgemv_csr(hbmat_t *A, double *X, double *Y) {
 	int m = A->m; int n = A->n;

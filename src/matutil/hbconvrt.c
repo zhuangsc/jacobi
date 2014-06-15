@@ -489,7 +489,7 @@ void symbolic_csr_task(int I, int J, hbmat_t *A, int b, int *etree, int *entry, 
 		int p_elemc = ab_vpos->elemc;
 		for ( int k = vptr[L]; k < vptr[L+1]; ++k ) {
 
-			if ( vpos[k] >= bcol && vpos[k] < ecol){
+			if ( vpos[k] >= bcol && vpos[k] < ecol && vpos[k] <= L){
 				pos_val.i = vpos[k] - bcol;
 				vector_insert_t_partial(ab_vpos, pos_val, p_elemc);
 			}
@@ -678,7 +678,7 @@ void hyper_sym_csr_task1(hbmat_t *block){
 		int p_elemc = ab_vpos->elemc;
 		for ( int k = vptr[L]; k < vptr[L+1]; ++k ) {
 
-			if ( vpos[k] >= bcol && vpos[k] < ecol){
+			if ( vpos[k] >= bcol && vpos[k] < ecol && vpos[k] <= L){
 				pos_val.i = vpos[k] - bcol;
 				vector_insert_t_partial(ab_vpos, pos_val, p_elemc);
 			}
@@ -743,7 +743,6 @@ hbmat_t* hb2hbh_hyper_sym_csr(hbmat_t *A, int b, int *etree){
 	hyper->m = M; hyper->n = N; hyper->vdiag = NULL;
 	hyper->vval = malloc(num*sizeof(hbmat_t*));
 	hyper->e_tree = etree;
-//	hbmat_t** hbmat_array = malloc(num*sizeof(hbmat_t*)); 
 	int* hentry = malloc(num * sizeof(int));
 
 	vector_t* ab_vptr = vector_create(); 
@@ -773,7 +772,6 @@ hbmat_t* hb2hbh_hyper_sym_csr(hbmat_t *A, int b, int *etree){
 		pos_val.i = ab_vpos->elemc;
 		vector_insert(ab_vptr, pos_val);
 		for ( J = 0; J < I+1; ++J ) {
-//			printf("I = %d, J = %d, hentry[%d] = %d\n", I, J, acc, hentry[acc]);
 			if ( hentry[acc] ) {
 				pos_val.i = J;
 				vector_insert(ab_vpos, pos_val);
@@ -805,7 +803,12 @@ hbmat_t* hb2hbh_hyper_sym_csr(hbmat_t *A, int b, int *etree){
 	vpos_pool = malloc(num_vpos * sizeof(int));
 	vval_pool = malloc(num_vval * sizeof(double));
 	vptr_pp = 0; vpos_pp = 0; vval_pp = 0;
-	
+	pthread_mutex_init(&mutexhb, NULL);
+	hyper->vptr_pool = vptr_pool;
+	hyper->vpos_pool = vpos_pool;
+	hyper->vval_pool = vval_pool;
+	hyper->mtx = &mutexhb;
+
 	pos_val.i = helemc;
 	vector_insert(ab_vptr, pos_val);
 	hyper->elemc = helemc;
@@ -869,7 +872,7 @@ void hyper_sym_csr_task2(hbmat_t *block){
 		int p_elemc = ab_vpos->elemc;
 		for ( int k = vptr[L]; k < vptr[L+1]; ++k ) {
 
-			if ( vpos[k] >= bcol && vpos[k] < ecol){
+			if ( vpos[k] >= bcol && vpos[k] < ecol && vpos[k] <= L){
 				val_int = vpos[k] - bcol;
 				vector_int_insert_t_partial(ab_vpos, val_int, p_elemc);
 			}

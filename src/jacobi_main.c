@@ -1,6 +1,10 @@
 
 #include "jacobi_main.h"
 
+extern long iter;
+extern int dim;
+extern int dim0;
+
 int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 
 	int M = Acsr->m; int N = Acsr->n;
@@ -15,19 +19,19 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 	double *x0 = malloc(bs * sizeof(double));
 	double *x1 = malloc(bs * sizeof(double));
 
-	printf("vdiag: %p\n", vdiag);
 	for ( int j = 0; j < N; ++j ) {
+		hbmat_t** Mtmp;
 		Adiag = vval[vdiag[j]];
-		print_matrix(Adiag, 0, "Adiag");
-//		hb_print_CSC2("Adiag.dat",Adiag);
-		diagL[j] = ompss_csr_dchol_ll(bs, Adiag, work);
-#pragma omp taskwait
-//		potrf_sparse_csr(Adiag);
-		print_matrix(diagL[j],0,"L");
+		Mtmp = ompss_csr_dchol_ll(bs, Adiag, work);
+		diagL[j] = hbh2hb(Mtmp);
+		hbh_free(Mtmp);
 	}
+	free(work);
 
-	printf("cholesky done\n");
+	puts("pass cholesky");
+	iter = 0;
 	while(1) {
+		++iter;
 		for ( int I = 0; I < N; ++I ) {
 			for ( int J = vptr[I]; J < vptr[I+1]; ++J ) {
 				if ( vpos[J] == I )
@@ -47,18 +51,26 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 				vtmp[I * bs + k] = x1[k];
 			}
 		}
-		for ( int k = 0; k < bs * N; ++k) {
-			if ( x[k] != vtmp[k] ) {
+		for ( int k = 0; k < dim0; ++k) {
+			if ( x[k] - vtmp[k] ) {
 				converge = 0;
 				break;
 			}
 			converge = 1;
 		}
 
-		for ( int k = 0; k < bs * N; ++k) {
+//		for ( int k = 0; k < dim; ++k)
+//			printf("%lf ",vtmp[k]);
+//		puts("");
+//		for ( int k = 0; k < dim; ++k)
+//			printf("%lf ",x[k]);
+//		puts("\n\n");
+
+		for ( int k = 0; k < dim; ++k) {
 			x[k] = vtmp[k];
 		}
-		if (converge)
+
+		if (converge || iter == 90000) 
 			break;
 	}
 

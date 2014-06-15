@@ -9,6 +9,9 @@ double *v_x;
 double *v_x0;
 int format;
 int bs;
+int dim;
+int dim0;
+long iter;
 
 int main(int argc, char* argv[]){
 
@@ -23,6 +26,14 @@ int main(int argc, char* argv[]){
 	}
 
 	jacobi_main_csr(Ahbh, v_x0, v_b, bs);
+
+	printf("Converge at iteration: %ld\n", iter);
+	for(int i = 0; i < dim0; ++i) 
+		printf("%lf ", v_x[i]);
+	puts("\n\n");
+	for(int i = 0; i < dim0; ++i) 
+		printf("%lf ", v_x0[i]);
+	puts("");
 
 	jacobi_shutdown();
 

@@ -26,7 +26,6 @@ int main(int argc, char* argv[]){
 	}
 
 	jacobi_main_csr(Ahbh, v_x0, v_b, bs);
-#pragma omp taskwait
 
 	printf("Converged after %ld iterations\n", iter);
 	double x = 0;
@@ -38,7 +37,7 @@ int main(int argc, char* argv[]){
 		x0 += v_x0[i] * v_x0[i];
 	x0 = sqrt(x0);
 	printf("2-norm x: %lf, 2-norm x0: %lf\n", x, x0);
-	printf("2-norm : %lf\n", (x-x0)/x);
+	printf("(n-n0)/n0 : %lf\n", fabs((x-x0)/x));
 
 	jacobi_shutdown();
 

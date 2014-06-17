@@ -9,7 +9,6 @@
 #include "hb.h"
 #include "vector.h"
 #include "hbconvrt.h"
-#include "ompss_cholesky.h"
 
 
 extern int bs;
@@ -40,7 +39,6 @@ static inline void __attribute__((always_inline)) array_clear(double* peel, int 
 	}
 }
 
-#if 0
 void test_print_matrix(const hbmat_t*, int, char*);
 void hbcopy(hbmat_t*, hbmat_t*);
 
@@ -56,7 +54,7 @@ void dgemm_sparse(hbmat_t* A, hbmat_t* B, hbmat_t* C);
 #pragma omp task in([1]A) inout([1]B)
 void dtrsm_sparse(hbmat_t* A, hbmat_t* B);
 
-#pragma omp task inout([1]A) priority(4)
+#pragma omp task inout([1]A)
 void potrf_sparse_csr(hbmat_t* A);
 
 #pragma omp task in([1]A) inout([1]B) priority(3)
@@ -67,18 +65,14 @@ void dgemm_sparse_csr(hbmat_t* A, hbmat_t* B, hbmat_t* C);
 
 #pragma omp task in([1]A) inout([1]B)
 void dtrsm_sparse_csr(hbmat_t* A, hbmat_t* B);
-#endif
 
 #pragma omp task in([1]A, X[0;bs-1]) out(B[0;bs-1])
 void jacobi_dgemv_csr(hbmat_t *A, double *X, double *B);
 #pragma omp task in(A[J*bs;(J+1)*bs]) inout(B[J*bs;(J+1)*bs])
 void jacobi_dsubvv(double *A, double *B , int J, int bs);
-#pragma omp task in([1]A, X[0;bs-1], [1]B, [1]C) out(Y[0;bs-1])
-void jacobi_dtrsm_csr(hbmat_t *A, double *X, double *Y, hbmat_t *B, hbmat_t *C);
+#pragma omp task in([1]A, X[0;bs-1]) out(Y[0;bs-1])
+void jacobi_dtrsm_csr(hbmat_t *A, double *X, double *Y);
 #pragma omp task in([1]A, X[0;bs-1]) out(Y[0;bs-1])
 void jacobi_dtrsmt_csr(hbmat_t *A, double *X, double *Y);
 
-#pragma omp task in([1]A) out(*(diag[I]))
-void jacobi_cholesky_csr(hbmat_t *A, int bs, hbmat_t **diag, int I);
-//void jacobi_cholesky_csr(hbmat_t *A, int bs, int *work, hbmat_t *diag);
 #endif

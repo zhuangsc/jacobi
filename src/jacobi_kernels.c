@@ -1,6 +1,5 @@
 #include "jacobi_kernels.h"
 
-#if 0
 void potrf_sparse(hbmat_t* A) {
 	int n = A->n;
 	int* vptr = A->vptr; int* vpos = A->vpos; 
@@ -143,6 +142,9 @@ void dtrsm_sparse(hbmat_t* A, hbmat_t* C){
 }
 
 void potrf_sparse_csr(hbmat_t* A) {
+
+	if ( A->vptr == NULL )
+		hyper_sym_csr_task2(A);
 
 	int m = A->m;
 	int* vptr = A->vptr; int* vpos = A->vpos; 
@@ -306,7 +308,6 @@ void dtrsm_sparse_csr(hbmat_t* A, hbmat_t* C){
 
 	free(peelb); free(peelc);
 }
-#endif
 
 void jacobi_dgemv_csr(hbmat_t *A, double *X, double *Y) {
 	int m = A->m; int n = A->n;
@@ -317,7 +318,7 @@ void jacobi_dgemv_csr(hbmat_t *A, double *X, double *Y) {
 	mkl_dcsrmv(trans, &m, &n, &alpha, matdescra, vval, vpos, vptr, vptr+1, X, &beta, Y);
 }
 
-void jacobi_dtrsm_csr(hbmat_t *A, double *X, double *Y, hbmat_t *B, hbmat_t *C) {
+void jacobi_dtrsm_csr(hbmat_t *A, double *X, double *Y) {
 	int m = A->m; int n = A->n;
 	int *vptr = A->vptr; int *vpos = A->vpos; double *vval = A->vval;
 	char *trans = "N"; double alpha = 1; char *matdescra = "TLNC";
@@ -336,11 +337,4 @@ void jacobi_dsubvv(double *A, double *B , int I, int bs) {
 	for ( int i = bcol; i < bcol+bs; ++i ) {
 		B[i] = A[i] - B[i];
 	}
-}
-
-void jacobi_cholesky_csr(hbmat_t *A, int bs, hbmat_t **diag, int I) {
-	int *work = malloc(bs*sizeof(int));
-	printf("vor chol %p\n", diag[I]);
-	diag[I] = ompss_csr_dchol_ll(bs, A, work);
-	printf("nach chol %p\n", diag[I]);
 }

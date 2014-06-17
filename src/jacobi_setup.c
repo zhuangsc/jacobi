@@ -22,9 +22,6 @@ int jacobi_setup (int argc, char* argv[]) {
 	readHB_newmat_double(matrix_file, &(A->m), &(A->n), &(A->elemc), &(A->vptr), &(A->vpos), (double **)&(A->vval));
 
 	one2zero(A);
-//	int *work = malloc(bs * sizeof(int));
-//	hbmat_t *tmp = hbh2hb(ompss_csr_dchol_ll(A->n, A, work));
-//	hb_print_CSC2("L111.dat", tmp);
 
 	dim0 = A->n;
 	Ahbh = hb2hbh(A, bs, format);

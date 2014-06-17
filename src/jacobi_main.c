@@ -16,15 +16,6 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 	hbmat_t *Adiag, *Adiag0, *Acurrent;
 	hbmat_t **diagL = malloc(N * sizeof(hbmat_t*) );
 	double *vtmp = malloc(dim * sizeof(double));
-//	int *work = malloc(bs * sizeof(int));
-//	for ( int j = 0; j < N; ++j ) {
-//		hbmat_t* Mtmp;
-//		Adiag = vval[vdiag[j]];
-//		Mtmp = ompss_csr_dchol_ll(bs, Adiag, work);
-//		diagL[j] = hbh2hb(Mtmp);
-//#pragma omp taskwait
-//		hbh_free(Mtmp);
-//	}
 
 	double **x0 = malloc(N * sizeof(double*));
 	for(int k = 0; k < N; ++k){
@@ -33,22 +24,22 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 		
 	double *x1 = malloc(dim * sizeof(double));
 	
-////////////////////////////////////////////
+////////////////////1st Iteration//////////////////
 
+	hbmat_t **A0 = malloc(dim *sizeof(hbmat_t*));
 	for(int k = 0; k < dim; ++k){
 		vtmp[k] = 0.0;
 	}
 	int **work = malloc(N * sizeof(int*));
 	for(int k = 0; k < N; ++k)
 		work[k] = malloc(bs*sizeof(int));
-	hbmat_t *mtmp;
 	for ( int I = 0; I < N; ++I ) {
 		Adiag0 = vval[vdiag[I]];
-		diagL[I] = ompss_csr_dchol_ll(bs, Adiag0, work[I]);
-//		diagL[I] = hbh2hb(mtmp);
-//		jacobi_cholesky_csr(Adiag, bs, diagL, I);
+		int *etree0 = etree(Adiag0);
+		A0[I] = hb2hbh_hyper_sym_csr(Adiag0, bs, etree0);
+		diagL[I] = ((hbmat_t**)A0[I]->vval)[0];
+		potrf_sparse_csr(diagL[I]);
 //#pragma omp taskwait
-		Adiag = ((hbmat_t**)diagL[I]->vval)[0];
 		for ( int J = vptr[I]; J < vptr[I+1]; ++J ) {
 			if ( vpos[J] != I ){
 				Acurrent = vval[J];
@@ -60,11 +51,8 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 		/*
 		 *	A[i,i] * x[i] = vtmp[i]
 		 */
-		puts("touch vptr");
-		for(int i = 0; i < Adiag->m; ++i)
-			printf("vptr %d\n", Adiag->vptr[i]);
-		jacobi_dtrsm_csr( Adiag, &(vtmp[I * bs]), x0[I], Adiag0, diagL[I]);
-		jacobi_dtrsmt_csr( Adiag, x0[I], &(x1[I*bs]) );
+		jacobi_dtrsm_csr( diagL[I], &(vtmp[I * bs]), x0[I]);
+		jacobi_dtrsmt_csr( diagL[I], x0[I], &(x1[I*bs]) );
 	}
 	puts("1st Iter");
 
@@ -98,9 +86,8 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 			/*
 			 *	A[i,i] * x[i] = vtmp[i]
 			 */
-			Adiag = ((hbmat_t**)diagL[I]->vval)[0];
-			jacobi_dtrsm_csr( Adiag, &(vtmp[I * bs]), x0[I] , Adiag0, diagL[I]);
-			jacobi_dtrsmt_csr( Adiag, x0[I], &(x1[I*bs]) );
+			jacobi_dtrsm_csr( diagL[I], &(vtmp[I * bs]), x0[I] );
+			jacobi_dtrsmt_csr( diagL[I], x0[I], &(x1[I*bs]) );
 		}
 
 #pragma omp taskwait
@@ -118,6 +105,7 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 		for ( int k = 0; k < dim; ++k) {
 			x[k] = vtmp[k];
 		}
+		converge = 0;
 	}
 
 	puts("through");

@@ -1,6 +1,6 @@
 
 #include "jacobi_main.h"
-#define MAX_ITER 1000
+#define MAX_ITER 5
 
 extern long iter;
 extern int dim;
@@ -16,6 +16,7 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 	hbmat_t *Adiag, *Adiag0, *Acurrent;
 	hbmat_t **diagL = malloc(N * sizeof(hbmat_t*) );
 	double *vtmp = malloc(dim * sizeof(double));
+	double *ltmp = calloc( N * N * bs , sizeof(double));
 
 	double **x0 = malloc(N * sizeof(double*));
 	for(int k = 0; k < N; ++k){
@@ -34,18 +35,23 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 	int **work = malloc(N * sizeof(int*));
 	for(int k = 0; k < N; ++k)
 		work[k] = malloc(bs*sizeof(int));
+
+
 	for ( int I = 0; I < N; ++I ) {
 		etree0[I] = etree(vval[vdiag[I]]);
 		A0[I] = hb2hbh_sym_etree_csr_p(vval[vdiag[I]], bs, etree0[I]);
 		diagL[I] = ((hbmat_t**)A0[I]->vval)[0];
 		potrf_sparse_csr(diagL[I]);
+		int lc = 0;
 		for ( int J = vptr[I]; J < vptr[I+1]; ++J ) {
 			if ( vpos[J] != I ){
 				Acurrent = vval[J];
-				jacobi_dgemv_csr( Acurrent, &(x[vpos[J] * bs]), &(vtmp[I * bs]) );
+				jacobi_dgemv_csr( Acurrent, &(x[vpos[J] * bs]), &(ltmp[I * N * bs + lc * bs]));
+				lc++;
+//				jacobi_dgemv_csr( Acurrent, &(x[vpos[J] * bs]), &(vtmp[I * bs]) );
 			}
 		}
-		jacobi_dsubvv( b, vtmp, I, bs );
+		jacobi_dsubvv( b, vtmp, I, bs, &(ltmp[I * N * bs]), lc);
 
   	/*
   	 *	A[i,i] * x[i] = vtmp[i]
@@ -62,8 +68,10 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 	for ( int k = 0; k < dim; ++k) {
 		x[k] = x1[k];
 	}
+	puts("Iter 1 through");
 
-///////////////////////////////////////////
+//////////////End of Iter 1///////////////
+
 	iter = 0;
 	while(!converge && iter < MAX_ITER) {
 		++iter;
@@ -71,14 +79,21 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 		for(int k = 0; k < dim; ++k){
 			vtmp[k] = 0.0;
 		}
+		for (int k = 0; k < N * N * bs; ++k)
+			ltmp[k] = 0.0;
+
 		for ( int I = 0; I < N; ++I ) {
+			int lc = 0;
 			for ( int J = vptr[I]; J < vptr[I+1]; ++J ) {
 				if ( vpos[J] != I ){
 					Acurrent = vval[J];
-					jacobi_dgemv_csr( Acurrent, &(x[vpos[J] * bs]), &(vtmp[I * bs]) );
+					jacobi_dgemv_csr( Acurrent, &(x[vpos[J] * bs]), &(ltmp[I * N * bs + lc * bs]));
+					lc++;
+//					jacobi_dgemv_csr( Acurrent, &(x[vpos[J] * bs]), &(vtmp[I * bs]) );
 				}
 			}
-			jacobi_dsubvv( b, vtmp, I, bs );
+			jacobi_dsubvv( b, vtmp, I, bs, &(ltmp[I * N * bs]), lc);
+//			jacobi_dsubvv( b, vtmp, I, bs );
 
 			/*
 			 *	A[i,i] * x[i] = vtmp[i]

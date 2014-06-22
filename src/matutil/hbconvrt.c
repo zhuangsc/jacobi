@@ -575,7 +575,7 @@ hbmat_t* hb2hbh_sym_etree_csr_p(hbmat_t *A, int b, int *etree){
 		}
 	}
 
-#pragma omp taskwait
+//#pragma omp taskwait
 
 	acc = 0;
 	int acc0 = 0;

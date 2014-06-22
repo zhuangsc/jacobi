@@ -40,7 +40,7 @@ hbmat_t* hb2hbh(hbmat_t *A, int b, int is_csr);
 
 void ereach_csr_p(hbmat_t *A, int r, int *etree, vector_t* sub_row, vector_t* sub_val);
 
-#pragma omp task in([1]A, [1]etree) out([1]entry, [1]block)
+//#pragma omp task in([1]A, [1]etree) out([1]entry, [1]block)
 void symbolic_csr_task(int I, int J, hbmat_t *A, int b, int *etree, int *entry, hbmat_t *block);
 
 hbmat_t* hb2hbh_sym_etree_csr_p(hbmat_t *A, int b, int *etree);

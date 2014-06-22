@@ -332,8 +332,12 @@ void jacobi_dtrsmt_csr(hbmat_t *A, double *X, double *Y) {
 	mkl_dcsrsv(trans, &m, &alpha, matdescra, vval, vpos, vptr, vptr+1, X, Y);
 }
 
-void jacobi_dsubvv(double *A, double *B , int I, int bs) {
+void jacobi_dsubvv(double *A, double *B , int I, int bs, double *tmp, int lc) {
 	int bcol = I * bs;
+	for ( int i = 0; i < lc; ++i )
+		for ( int j = 0; j < bs; ++j)
+			B[bcol+j] += tmp[bs * i + j];
+
 	for ( int i = bcol; i < bcol+bs; ++i ) {
 		B[i] = A[i] - B[i];
 	}

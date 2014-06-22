@@ -27,6 +27,7 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 ////////////////////1st Iteration//////////////////
 
 	hbmat_t **A0 = malloc(dim *sizeof(hbmat_t*));
+	int **etree0 = malloc(dim * sizeof(int*));
 	for(int k = 0; k < dim; ++k){
 		vtmp[k] = 0.0;
 	}
@@ -34,12 +35,10 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 	for(int k = 0; k < N; ++k)
 		work[k] = malloc(bs*sizeof(int));
 	for ( int I = 0; I < N; ++I ) {
-		Adiag0 = vval[vdiag[I]];
-		int *etree0 = etree(Adiag0);
-		A0[I] = hb2hbh_hyper_sym_csr(Adiag0, bs, etree0);
+		etree0[I] = etree(vval[vdiag[I]]);
+		A0[I] = hb2hbh_sym_etree_csr_p(vval[vdiag[I]], bs, etree0[I]);
 		diagL[I] = ((hbmat_t**)A0[I]->vval)[0];
 		potrf_sparse_csr(diagL[I]);
-//#pragma omp taskwait
 		for ( int J = vptr[I]; J < vptr[I+1]; ++J ) {
 			if ( vpos[J] != I ){
 				Acurrent = vval[J];
@@ -48,14 +47,12 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 		}
 		jacobi_dsubvv( b, vtmp, I, bs );
 
-		/*
-		 *	A[i,i] * x[i] = vtmp[i]
-		 */
+  	/*
+  	 *	A[i,i] * x[i] = vtmp[i]
+  	 */
 		jacobi_dtrsm_csr( diagL[I], &(vtmp[I * bs]), x0[I]);
 		jacobi_dtrsmt_csr( diagL[I], x0[I], &(x1[I*bs]) );
 	}
-	puts("1st Iter");
-
 #pragma omp taskwait
 
 //	for ( int k = 0; k < dim; ++k) {
@@ -65,7 +62,7 @@ int jacobi_main_csr(hbmat_t *Acsr, double *x, double *b, int bs){
 	for ( int k = 0; k < dim; ++k) {
 		x[k] = x1[k];
 	}
-	
+
 ///////////////////////////////////////////
 	iter = 0;
 	while(!converge && iter < MAX_ITER) {

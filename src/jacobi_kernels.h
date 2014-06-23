@@ -69,10 +69,8 @@ void dtrsm_sparse_csr(hbmat_t* A, hbmat_t* B);
 
 #pragma omp task in([1]A, X[0;bs-1]) inout(Y[0;bs-1])
 void jacobi_dgemv_csr(hbmat_t *A, double *X, double *Y);
-//#pragma omp task in(A[J*bs;(J+1)*bs]) inout(B[J*bs;(J+1)*bs])
-//void jacobi_dsubvv(double *A, double *B , int J, int bs);
-#pragma omp task in(A[J*bs;(J+1)*bs], tmp[0;dim-1]) inout(B[J*bs;(J+1)*bs])
-void jacobi_dsubvv(double *A, double *B , int J, int bs, double *tmp, int lc);
+#pragma omp task in(A[J*bs;(J+1)*bs], tmp[0;bs]) inout(B[J*bs;(J+1)*bs])
+void jacobi_dsubvv(double *A, double *B , int J, int bs, double *tmp);
 #pragma omp task in([1]A, X[0;bs-1]) out(Y[0;bs-1])
 void jacobi_dtrsm_csr(hbmat_t *A, double *X, double *Y);
 #pragma omp task in([1]A, X[0;bs-1]) out(Y[0;bs-1])
